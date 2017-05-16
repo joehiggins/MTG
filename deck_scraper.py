@@ -13,12 +13,13 @@ from bs4 import BeautifulSoup
 from collections import defaultdict
 
 #directory the we will dump the files into
+#TODO: JCH have this be dynamic file path so it works on other machines
 filepath = 'C:\\Users\\Joe\\Documents\\MTG\\MTG Goldfish Decks\\'
 os.chdir(filepath)
 
 #Construct the First URL to request
 baseURL = 'https://www.mtggoldfish.com/deck/'
-start = 262533 #258216 is the true start number, the non-commented number is the first deck I found
+start = 275033 #258216 is the true start number and is the earliest deck I found
 finish = 645533 #determined by looking at most recently uploaded deck: https://www.mtggoldfish.com/deck/custom/standard#paper 
 endURL = '#paper'
 
@@ -33,28 +34,25 @@ for i in range(start, finish + 1):
     soup = BeautifulSoup(contents, 'html.parser')
 
     #Check if the URL was valid, if it either:
-    #   or if i got throttled keep trying again    
+    #   i got throttled keep trying again    
+    #   bad gateway
     #   doesn't exist
     #   or the URL failed because th deck is privateand redirected to https://www.mtggoldfish.com/metagame#paper    
+    #   empty deck causes table object not to exist
 
     #TODO: JCH rather than look for all the ways it can fail, should look for what indicates success and move forward only if finding that
     if soup.text == "Throttled\n":
         print("            Currently throttled")    
-        '''        
-        print("            Will try " + URL + " again in 10 minutes")
-        time.sleep(5 * 60)        
-        print("            Will try " + URL + " again in 5 minutes")
-        time.sleep(3 * 60)
-        print("            Will try " + URL + " again in 2 minutes")
-        time.sleep(1 * 60)
-        '''
-        print("            Will try " + URL + " again in 1 minutes")
+        print("            Will try " + URL + " again in 1 minute")
         time.sleep(30)
         print("            Will try " + URL + " again in 30 seconds")
         time.sleep(20)
         print("            Will try " + URL + " again in 10 seconds")
         time.sleep(10)
         i += -1
+        continue
+    elif hasattr(soup.find('title'), 'text') and soup.text == "\n502 Bad Gateway\n\n502 Bad Gateway\nnginx/1.8.0\n\n\n":
+        print("            Error:    502")        
         continue
     elif hasattr(soup.find('title'), 'text') and soup.find('title').text == 'Oops! Page not found! | MTGGoldfish (404)':
         print("            Error:    404")
