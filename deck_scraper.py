@@ -19,7 +19,7 @@ os.chdir(filepath)
 
 #Construct the First URL to request
 baseURL = 'https://www.mtggoldfish.com/deck/'
-start = 275033 #258216 is the true start number and is the earliest deck I found
+start = 321262 #258216 is the true start number and is the earliest deck I found
 finish = 645533 #determined by looking at most recently uploaded deck: https://www.mtggoldfish.com/deck/custom/standard#paper 
 endURL = '#paper'
 
@@ -35,8 +35,9 @@ for i in range(start, finish + 1):
 
     #Check if the URL was valid, if it either:
     #   i got throttled keep trying again    
-    #   bad gateway
-    #   doesn't exist
+    #   500   
+    #   502: bad gateway
+    #   404: doesn't exist
     #   or the URL failed because th deck is privateand redirected to https://www.mtggoldfish.com/metagame#paper    
     #   empty deck causes table object not to exist
 
@@ -50,6 +51,9 @@ for i in range(start, finish + 1):
         print("            Will try " + URL + " again in 10 seconds")
         time.sleep(10)
         i += -1
+        continue
+    elif hasattr(soup.find('title'), 'text') and soup.text == "\n\n\nOops! | MTGGoldfish (500)\n\n    body{text-align:center;position:absolute;top:50%;margin:0;margin-top:-275px;width:100%;}\n    h2,h3{color:#555;font:bold 200% sans-serif; padding: 10px;}\n    p{color:#777;font:normal 150% sans-serif; padding: 10px;}\n    img{max-width: 100%; display:block; margin: 0 auto; height: auto;}\n  \n\n\n\n\nOops! Something went wrong!\nWe've been notified about this issue and we'll take a look at it shortly.\n    In the meantime, please try another page on mtggoldfish.\n\n\n":
+        print("            Error:    500")        
         continue
     elif hasattr(soup.find('title'), 'text') and soup.text == "\n502 Bad Gateway\n\n502 Bad Gateway\nnginx/1.8.0\n\n\n":
         print("            Error:    502")        
