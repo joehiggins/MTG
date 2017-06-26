@@ -9,13 +9,25 @@ import os
 import json
 import requests
 import time
+import errno
+from functools import reduce
 from bs4 import BeautifulSoup
 from collections import defaultdict
 
+
+def mkdir_p(path):
+    try:
+        os.makedirs(path)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
+
 # directory the we will dump the files into
 # TODO: JCH have this be dynamic file path so it works on other machines
-filepath = 'C:\\Users\\Joe\\Documents\\MTG\\MTG Goldfish Decks\\'
-os.chdir(filepath)
+output_directory = 'decks'
+mkdir_p(output_directory)
 
 # Construct the First URL to request
 baseURL = 'https://www.mtggoldfish.com/deck/'
@@ -38,7 +50,7 @@ for i in range(start, finish + 1):
     #   500
     #   502: bad gateway
     #   404: doesn't exist
-    #   or the URL failed because th deck is privateand redirected to https://www.mtggoldfish.com/metagame#paper
+    #   or the URL failed because the deck is private and redirected to https://www.mtggoldfish.com/metagame#paper
     #   empty deck causes table object not to exist
 
     # TODO: JCH rather than look for all the ways it can fail, should look for what indicates success and move forward only if finding that
@@ -71,7 +83,8 @@ for i in range(start, finish + 1):
     # Find the elements we are about with beautiful soup
     title = soup.find('h2', attrs={"class": "deck-view-title"})
     description = soup.find('div', attrs={"class": "deck-view-description"})
-    deck_table = soup.find('table', attrs={"class": "deck-view-deck-table"})
+    paper_tab = soup.find('div', attrs={"id": "tab-paper"})
+    deck_table = paper_tab.find('table', attrs={"class": "deck-view-deck-table"})
 
     # get the deck description
     deck_name = ''
@@ -131,10 +144,34 @@ for i in range(start, finish + 1):
 
     deck_json = json.dumps(deck, ensure_ascii=False)
     # https://support.microsoft.com/en-us/help/905231/information-about-the-characters-that-you-cannot-use-in-site-names,-folder-names,-and-file-names-in-sharepoint
-    filename = deck_name.replace('/', '-FSLASH-').replace('|', '-PIPE-').replace('?', '-QUESTION-').replace('~', '-TILDE-').replace('#', '-POUND-').replace('%', '-PERCENT-').replace('&', '-AMPERSAND-').replace('*', '-ASTERISK-').replace('{', '-LBRACE-').replace('}', '-RBRACE-').replace('\\', '-BSLASH-').replace(':', '-COLON-').replace('<', '-LANGLE-').replace('>', '-RANGLE-').replace('+', '-PLUS-').replace('\"', '-2QUOTE-').replace('\'', '-1QUOTE-').replace('\n', '-NEWLINE-').replace('\t', '-TAB-').replace('\r', '-RETURN-') + "_" + str(deck_num) + ".json"
-    with open(filename, 'w') as outfile:
-        json.dump(deck, outfile)
+    deck_name_replacements = [
+        ['/', '-FSLASH-'],
+        ['|', '-PIPE-'],
+        ['?', '-QUESTION-'],
+        ['~', '-TILDE-'],
+        ['#', '-POUND-'],
+        ['%', '-PERCENT-'],
+        ['&', '-AMPERSAND-'],
+        ['*', '-ASTERISK-'],
+        ['{', '-LBRACE-'],
+        ['}', '-RBRACE-'],
+        ['\\', '-BSLASH-'],
+        [':', '-COLON-'],
+        ['<', '-LANGLE-'],
+        ['>', '-RANGLE-'],
+        ['+', '-PLUS-'],
+        ['\"', '-2QUOTE-'],
+        ['\'', '-1QUOTE-'],
+        ['\n', '-NEWLINE-'],
+        ['\t', '-TAB-'],
+        ['\r', '-RETURN-']
+    ]
 
-    print("            Success: wrote " + filename)
-    print("                     into  " + filepath)
+    safe_deck_name_for_saving_to_file = reduce((lambda x, y: x.replace(y[0], y[1])), deck_name_replacements, deck_name)
+    file_name = output_directory + '/' + safe_deck_name_for_saving_to_file + "_" + str(deck_num) + ".json"
+    with open(file_name, 'w') as out_file:
+        json.dump(deck, out_file)
+
+    print("            Success: wrote " + file_name)
+    print("                     into  " + output_directory)
     # print(json.dumps(deck, ensure_ascii=False, indent=2, separators=(',', ': ')))
