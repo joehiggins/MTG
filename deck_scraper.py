@@ -12,38 +12,38 @@ import time
 from bs4 import BeautifulSoup
 from collections import defaultdict
 
-#directory the we will dump the files into
-#TODO: JCH have this be dynamic file path so it works on other machines
+# directory the we will dump the files into
+# TODO: JCH have this be dynamic file path so it works on other machines
 filepath = 'C:\\Users\\Joe\\Documents\\MTG\\MTG Goldfish Decks\\'
 os.chdir(filepath)
 
-#Construct the First URL to request
+# Construct the First URL to request
 baseURL = 'https://www.mtggoldfish.com/deck/'
-start = 321262 #258216 is the true start number and is the earliest deck I found
-finish = 645533 #determined by looking at most recently uploaded deck: https://www.mtggoldfish.com/deck/custom/standard#paper 
+start = 321262  # 258216 is the true start number and is the earliest deck I found
+finish = 645533  # determined by looking at most recently uploaded deck: https://www.mtggoldfish.com/deck/custom/standard#paper 
 endURL = '#paper'
 
 for i in range(start, finish + 1):
     deck_num = i
     URL = baseURL + str(deck_num) + endURL
-    
-    #Get the page
+
+    # Get the page
     print("Requesting:          " + URL)
     page = requests.get(URL)
     contents = page.content
     soup = BeautifulSoup(contents, 'html.parser')
 
-    #Check if the URL was valid, if it either:
-    #   i got throttled keep trying again    
-    #   500   
+    # Check if the URL was valid, if it either:
+    #   i got throttled keep trying again
+    #   500
     #   502: bad gateway
     #   404: doesn't exist
-    #   or the URL failed because th deck is privateand redirected to https://www.mtggoldfish.com/metagame#paper    
+    #   or the URL failed because th deck is privateand redirected to https://www.mtggoldfish.com/metagame#paper
     #   empty deck causes table object not to exist
 
-    #TODO: JCH rather than look for all the ways it can fail, should look for what indicates success and move forward only if finding that
+    # TODO: JCH rather than look for all the ways it can fail, should look for what indicates success and move forward only if finding that
     if soup.text == "Throttled\n":
-        print("            Currently throttled")    
+        print("            Currently throttled")
         print("            Will try " + URL + " again in 1 minute")
         time.sleep(30)
         print("            Will try " + URL + " again in 30 seconds")
@@ -53,10 +53,10 @@ for i in range(start, finish + 1):
         i += -1
         continue
     elif hasattr(soup.find('title'), 'text') and soup.text == "\n\n\nOops! | MTGGoldfish (500)\n\n    body{text-align:center;position:absolute;top:50%;margin:0;margin-top:-275px;width:100%;}\n    h2,h3{color:#555;font:bold 200% sans-serif; padding: 10px;}\n    p{color:#777;font:normal 150% sans-serif; padding: 10px;}\n    img{max-width: 100%; display:block; margin: 0 auto; height: auto;}\n  \n\n\n\n\nOops! Something went wrong!\nWe've been notified about this issue and we'll take a look at it shortly.\n    In the meantime, please try another page on mtggoldfish.\n\n\n":
-        print("            Error:    500")        
+        print("            Error:    500")
         continue
     elif hasattr(soup.find('title'), 'text') and soup.text == "\n502 Bad Gateway\n\n502 Bad Gateway\nnginx/1.8.0\n\n\n":
-        print("            Error:    502")        
+        print("            Error:    502")
         continue
     elif hasattr(soup.find('title'), 'text') and soup.find('title').text == 'Oops! Page not found! | MTGGoldfish (404)':
         print("            Error:    404")
@@ -67,74 +67,74 @@ for i in range(start, finish + 1):
     elif soup.find('td', attrs='deck-header').text.strip() == "0 Cards Total":
         print("            Error: Some scrub entered an empty deck... wtf")
         continue
-    
-    #Find the elements we are about with beautiful soup
-    title = soup.find('h2', attrs={"class" : "deck-view-title"})
-    description = soup.find('div', attrs={"class" : "deck-view-description"})
-    deck_table = soup.find('table', attrs={"class" : "deck-view-deck-table"})
-    
-    #get the deck description
+
+    # Find the elements we are about with beautiful soup
+    title = soup.find('h2', attrs={"class": "deck-view-title"})
+    description = soup.find('div', attrs={"class": "deck-view-description"})
+    deck_table = soup.find('table', attrs={"class": "deck-view-deck-table"})
+
+    # get the deck description
     deck_name = ''
     author = ''
     if len([line for line in title.text.strip().split("\n") if line]) == 2:
-        deck_name,author = [line for line in title.text.strip().split("\n") if line]
-    
+        deck_name, author = [line for line in title.text.strip().split("\n") if line]
+
     user = ''
     archetype = ''
     if len([line for line in description.text.strip().split("\n") if line]) == 2:
-        play_format,submit_date = [line for line in description.text.strip().split("\n") if line]
+        play_format, submit_date = [line for line in description.text.strip().split("\n") if line]
     elif len([line for line in description.text.strip().split("\n") if line]) == 3:
-        user,play_format,submit_date = [line for line in description.text.strip().split("\n") if line]
+        user, play_format, submit_date = [line for line in description.text.strip().split("\n") if line]
     elif len([line for line in description.text.strip().split("\n") if line]) == 4:
-        user,play_format,submit_date,archetype = [line for line in description.text.strip().split("\n") if line]
+        user, play_format, submit_date, archetype = [line for line in description.text.strip().split("\n") if line]
     output_description = {
-        'deck_name': deck_name, 
-        'author': author, 
-        'user': user, 
-        'format': play_format, 
+        'deck_name': deck_name,
+        'author': author,
+        'user': user,
+        'format': play_format,
         'archetype': archetype,
         'date': submit_date,
         'url': URL
     }
-    
-    #get the decklist
+
+    # get the decklist
     deck_list = defaultdict(list)
     rows = deck_table.find_all('tr')
     for row in rows:
         cols = row.find_all('td')
         card = {}
-    
-        #if the <td> is a section divider, grab it (e.g., creatures, spells...)    
-        if len(cols) == 1 and str.find(str(cols[0]),'Total') < 0:
+
+        # if the <td> is a section divider, grab it (e.g., creatures, spells...)
+        if len(cols) == 1 and str.find(str(cols[0]), 'Total') < 0:
             cols = [ele.text.strip() for ele in cols]
             section = cols[len(cols) - 1]
-            newlineLocation = str.find(section,'\n')
+            newlineLocation = str.find(section, '\n')
             section = section[0:newlineLocation]
-            
-        #if the <td> is a card, get [name, quantity, price] and add it to the section (e.g., 2 dark ritual at 1.00 added the spells section)
-        elif len(cols) > 1:        
+
+        # if the <td> is a card, get [name, quantity, price] and add it to the section (e.g., 2 dark ritual at 1.00 added the spells section)
+        elif len(cols) > 1:
             fields = [ele.get('class')[0] for ele in cols]
             cards = [ele.text.strip() for ele in cols]
-            
-            deck_list_entry = dict(zip(fields,cards))
+
+            deck_list_entry = dict(zip(fields, cards))
             deck_list_entry = {field: card for field, card in deck_list_entry.items() if card}
-    
+
             deck_list[section].append(deck_list_entry)
-            
-    #Dictionaries --> JSON         
-    deck  = {
+
+    # Dictionaries --> JSON
+    deck = {
         str(deck_num): {
             'description': output_description,
             'list': dict(deck_list)
-        }    
+        }
     }
-    
+
     deck_json = json.dumps(deck, ensure_ascii=False)
-    #https://support.microsoft.com/en-us/help/905231/information-about-the-characters-that-you-cannot-use-in-site-names,-folder-names,-and-file-names-in-sharepoint
-    filename = deck_name.replace('/','-FSLASH-').replace('|', '-PIPE-').replace('?', '-QUESTION-').replace('~','-TILDE-').replace('#','-POUND-').replace('%','-PERCENT-').replace('&','-AMPERSAND-').replace('*','-ASTERISK-').replace('{','-LBRACE-').replace('}','-RBRACE-').replace('\\','-BSLASH-').replace(':','-COLON-').replace('<','-LANGLE-').replace('>','-RANGLE-').replace('+','-PLUS-').replace('\"','-2QUOTE-').replace('\'','-1QUOTE-').replace('\n','-NEWLINE-').replace('\t','-TAB-').replace('\r','-RETURN-') + "_" + str(deck_num) + ".json"
+    # https://support.microsoft.com/en-us/help/905231/information-about-the-characters-that-you-cannot-use-in-site-names,-folder-names,-and-file-names-in-sharepoint
+    filename = deck_name.replace('/', '-FSLASH-').replace('|', '-PIPE-').replace('?', '-QUESTION-').replace('~', '-TILDE-').replace('#', '-POUND-').replace('%', '-PERCENT-').replace('&', '-AMPERSAND-').replace('*', '-ASTERISK-').replace('{', '-LBRACE-').replace('}', '-RBRACE-').replace('\\', '-BSLASH-').replace(':', '-COLON-').replace('<', '-LANGLE-').replace('>', '-RANGLE-').replace('+', '-PLUS-').replace('\"', '-2QUOTE-').replace('\'', '-1QUOTE-').replace('\n', '-NEWLINE-').replace('\t', '-TAB-').replace('\r', '-RETURN-') + "_" + str(deck_num) + ".json"
     with open(filename, 'w') as outfile:
         json.dump(deck, outfile)
-    
+
     print("            Success: wrote " + filename)
     print("                     into  " + filepath)
-    #print(json.dumps(deck, ensure_ascii=False, indent=2, separators=(',', ': ')))
+    # print(json.dumps(deck, ensure_ascii=False, indent=2, separators=(',', ': ')))
