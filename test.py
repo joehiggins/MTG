@@ -35,14 +35,14 @@ def get_how_many_you_have(row):
 deck_df['how_many_you_have'] = deck_df.apply(get_how_many_you_have, axis=1)
 deck_df['how_many_you_need'] = deck_df['how_many_the_deck_needs'] - deck_df['how_many_you_have']
 
-def get_cost_to_complete_playset(row):
+def get_cost_to_complete_deck_requirements(row):
     return (row['how_many_the_deck_needs'] - row['how_many_you_have']) * row['unit_price']
 
 def get_value_of_cards_you_have(row):
     return row['how_many_you_have'] * row['unit_price']
 
 deck_df['value_of_cards_you_have'] = deck_df.apply(get_value_of_cards_you_have, axis=1)
-deck_df['cost_to_complete_playset'] = deck_df.apply(get_cost_to_complete_playset, axis=1)
+deck_df['cost_to_complete_deck_requirements'] = deck_df.apply(get_cost_to_complete_deck_requirements, axis=1)
 print(deck_df)
 
 cards_you_have = deck_df[deck_df['how_many_you_have'] > 0]
@@ -56,7 +56,7 @@ cards_you_need_to_buy = deck_df[deck_df['how_many_you_need'] > 0]
 print('cards you need to buy:')
 print(cards_you_need_to_buy[['name', 'how_many_you_need', 'unit_price']])
 print('total cost: ')
-total_cost_to_complete_the_deck = deck_df['cost_to_complete_playset'].sum()
+total_cost_to_complete_the_deck = deck_df['cost_to_complete_deck_requirements'].sum()
 print(total_cost_to_complete_the_deck)
 
 print('percentage of the deck you own by value: ' + str(100 * total_value_of_your_cards / (total_value_of_your_cards + total_cost_to_complete_the_deck)))
