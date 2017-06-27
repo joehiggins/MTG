@@ -1,16 +1,15 @@
 import pandas as pd
 import json
 
-json_file = '7_Land_Belcher_369784.json'
-collection_file = 'collection.csv'
+json_file = 'C:\\Users\\Joe\\Documents\\MTG\\MTG Goldfish Decks\\Sultai Delirium_591943.json'
+collection_file = 'C:\\Users\\Joe\\Documents\\MTG\\20170625 my_collection.csv'
 
 with open(json_file) as data_file:
     json_data = json.load(data_file)
 
-deck_number = json_data.keys()[0]
+deck_number = list(json_data.keys())[0]
 deck_object = json_data[deck_number]
 list_of_card_groups = deck_object['list']
-
 
 def get_df_of_cards_in_type(card_type):
     cards_df = pd.DataFrame(list_of_card_groups[card_type])
@@ -24,10 +23,13 @@ deck_df['how_many_the_deck_needs'] = pd.to_numeric(deck_df['how_many_the_deck_ne
 deck_df['price'] = pd.to_numeric(deck_df['price'])
 deck_df['unit_price'] = deck_df['price'] / deck_df['how_many_the_deck_needs']
 
-# import list of collection, then match
-collection = pd.read_csv(collection_file, index_col=0)
+# import list of collection, aggregate to card name level (squashes foils/sets), then match
+collection = pd.read_csv(collection_file)
+collection = collection.groupby('Card')['Quantity'].sum()
+collection = pd.DataFrame(collection)
 # to do: exclude basic lands?
 basic_lands = ['Forest', 'Mountain', 'Island', 'Plains', 'Swamp']
+
 
 def get_how_many_you_have(row):
     return collection.loc[row['name'], 'Quantity'] if row['name'] in collection.index else 0
