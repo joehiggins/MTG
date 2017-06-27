@@ -1,7 +1,7 @@
 import pandas as pd
 import json
 
-json_file = 'C:\\Users\\Joe\\Documents\\MTG\\MTG Goldfish Decks\\Sultai Delirium_591943.json'
+json_file = 'C:\\Users\\Joe\\Documents\\MTG\\MTG Goldfish Decks\\!!!EXTREME BUDGET!!!_527280.json'
 collection_file = 'C:\\Users\\Joe\\Documents\\MTG\\20170625 my_collection.csv'
 
 with open(json_file) as data_file:
@@ -27,9 +27,10 @@ deck_df['unit_price'] = deck_df['price'] / deck_df['how_many_the_deck_needs']
 collection = pd.read_csv(collection_file)
 collection = collection.groupby('Card')['Quantity'].sum()
 collection = pd.DataFrame(collection)
-# to do: exclude basic lands?
-basic_lands = ['Forest', 'Mountain', 'Island', 'Plains', 'Swamp']
-
+#Add basic lands to collection
+basic_lands = pd.DataFrame([['Forest',99], ['Mountain',99], ['Island',99], ['Plains',99], ['Swamp',99]]).set_index(0)
+basic_lands = basic_lands.rename(columns={1: "Quantity"})
+collection = collection.append(basic_lands)
 
 def get_how_many_you_have(row):
     return collection.loc[row['name'], 'Quantity'] if row['name'] in collection.index else 0
@@ -62,6 +63,6 @@ total_cost_to_complete_the_deck = deck_df['cost_to_complete_deck_requirements'].
 print(total_cost_to_complete_the_deck)
 
 print('percentage of the deck you own by value: ' + str(100 * total_value_of_your_cards / (total_value_of_your_cards + total_cost_to_complete_the_deck)))
-print('deck owned by count: ' + str(deck_df['how_many_you_have'].sum()) + ' / ' + str(deck_df['how_many_the_deck_needs'].sum()))
+print('deck owned by count: ' + str(deck_df['how_many_the_deck_needs'].where(deck_df['how_many_you_have'] > 0, 0).sum()) + ' / ' + str(deck_df['how_many_the_deck_needs'].sum()))
 
 print('pokedex fraction unlocked: ' + str(len(cards_you_have)) + ' / ' + str(len(deck_df)))
