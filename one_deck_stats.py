@@ -1,7 +1,7 @@
 import pandas as pd
 import json
 
-json_file = 'C:\\Users\\Joe\\Documents\\MTG\\MTG Goldfish Decks\\!!!EXTREME BUDGET!!!_527280.json'
+json_file = 'C:\\Users\\Joe\\Documents\\MTG\\MTG Goldfish Decks\\Super cheap, vintage deck YES U GUESS IT_559676.json'
 collection_file = 'C:\\Users\\Joe\\Documents\\MTG\\20170625 my_collection.csv'
 
 with open(json_file) as data_file:
@@ -20,7 +20,7 @@ def get_df_of_cards_in_type(card_type):
 card_type_dfs = map(get_df_of_cards_in_type, list_of_card_groups.keys())
 deck_df = pd.concat(card_type_dfs)
 deck_df['how_many_the_deck_needs'] = pd.to_numeric(deck_df['how_many_the_deck_needs'])
-deck_df['price'] = pd.to_numeric(deck_df['price'])
+deck_df['price'] = pd.to_numeric(deck_df['price'].str.replace(',','').fillna(0))
 deck_df['unit_price'] = deck_df['price'] / deck_df['how_many_the_deck_needs']
 
 # import list of collection, aggregate to card name level (squashes foils/sets), then match
@@ -67,5 +67,3 @@ print('percentage of the deck you own by value: ' + str(100 * total_value_of_you
 print('deck owned by count: ' + str(deck_df['how_many_the_deck_needs'].where(deck_df['how_many_you_have'] > 0, 0).sum()) + ' / ' + str(deck_df['how_many_the_deck_needs'].sum()))
 
 print('pokedex fraction unlocked: ' + str(len(cards_you_have)) + ' / ' + str(len(deck_df)))
-
-#desired output: deck name, deck archetype, pct cost owned, pct cards owned, pct pokedex owned, cost owned, total cost, 

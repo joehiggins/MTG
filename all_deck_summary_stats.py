@@ -90,6 +90,7 @@ for filename in os.listdir(directory):
         
         deck_df['how_many_you_have'] = deck_df.apply(get_how_many_you_have, axis=1)
         deck_df['how_many_you_need'] = deck_df.apply(get_how_many_you_need, axis=1)
+        cards_you_have = deck_df[deck_df['how_many_you_have'] > 0]        
         
         deck_df['value_of_cards_you_have'] = deck_df.apply(get_value_of_cards_you_have, axis=1)
         deck_df['cost_to_complete_deck_requirements'] = deck_df.apply(get_cost_to_complete_deck_requirements, axis=1)
@@ -139,4 +140,4 @@ for filename in os.listdir(directory):
     else:
         continue
 
-output.to_csv(collection_directory+'all_deck_summary_stats.csv', encoding = 'utf-8')
+output.to_csv(collection_directory+'all_deck_summary_stats2.csv', encoding = 'utf-8')
