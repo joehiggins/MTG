@@ -139,4 +139,4 @@ for filename in os.listdir(directory):
     else:
         continue
 
-output.to_csv(collection_directory+'all_deck_summary_stats.csv')
+output.to_csv(collection_directory+'all_deck_summary_stats.csv', encoding = 'utf-8')
