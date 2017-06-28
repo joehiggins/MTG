@@ -46,6 +46,7 @@ def get_value_of_cards_you_have(row):
 
 deck_df['value_of_cards_you_have'] = deck_df.apply(get_value_of_cards_you_have, axis=1)
 deck_df['cost_to_complete_deck_requirements'] = deck_df.apply(get_cost_to_complete_deck_requirements, axis=1)
+
 print(deck_df)
 
 cards_you_have = deck_df[deck_df['how_many_you_have'] > 0]
@@ -66,3 +67,5 @@ print('percentage of the deck you own by value: ' + str(100 * total_value_of_you
 print('deck owned by count: ' + str(deck_df['how_many_the_deck_needs'].where(deck_df['how_many_you_have'] > 0, 0).sum()) + ' / ' + str(deck_df['how_many_the_deck_needs'].sum()))
 
 print('pokedex fraction unlocked: ' + str(len(cards_you_have)) + ' / ' + str(len(deck_df)))
+
+#desired output: deck name, deck archetype, pct cost owned, pct cards owned, pct pokedex owned, cost owned, total cost, 
