@@ -1,7 +1,7 @@
 import pandas as pd
 import json
 
-json_file = 'C:\\Users\\Joe\\Documents\\MTG\\MTG Goldfish Decks\\!!!EXTREME BUDGET!!!_527280.json'
+json_file = 'C:\\Users\\Joe\\Documents\\MTG\\MTG Goldfish Decks\\Super cheap, vintage deck YES U GUESS IT_559676.json'
 collection_file = 'C:\\Users\\Joe\\Documents\\MTG\\20170625 my_collection.csv'
 
 with open(json_file) as data_file:
@@ -20,7 +20,7 @@ def get_df_of_cards_in_type(card_type):
 card_type_dfs = map(get_df_of_cards_in_type, list_of_card_groups.keys())
 deck_df = pd.concat(card_type_dfs)
 deck_df['how_many_the_deck_needs'] = pd.to_numeric(deck_df['how_many_the_deck_needs'])
-deck_df['price'] = pd.to_numeric(deck_df['price'])
+deck_df['price'] = pd.to_numeric(deck_df['price'].str.replace(',','').fillna(0))
 deck_df['unit_price'] = deck_df['price'] / deck_df['how_many_the_deck_needs']
 
 # import list of collection, aggregate to card name level (squashes foils/sets), then match
@@ -46,6 +46,7 @@ def get_value_of_cards_you_have(row):
 
 deck_df['value_of_cards_you_have'] = deck_df.apply(get_value_of_cards_you_have, axis=1)
 deck_df['cost_to_complete_deck_requirements'] = deck_df.apply(get_cost_to_complete_deck_requirements, axis=1)
+
 print(deck_df)
 
 cards_you_have = deck_df[deck_df['how_many_you_have'] > 0]
